@@ -116,7 +116,7 @@ def query_server(
         )
         if isinstance(prompt, str):
             response = client.completions.create(
-                model="default",
+                model=model_name,
                 prompt=prompt,
                 temperature=temperature,
                 n=num_completions,
@@ -126,7 +126,7 @@ def query_server(
             outputs = [choice.text for choice in response.choices]
         else:
             response = client.chat.completions.create(
-                model="default",
+                model=model_name,
                 messages=prompt,
                 temperature=temperature,
                 n=num_completions,
