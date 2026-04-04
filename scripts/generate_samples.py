@@ -57,6 +57,8 @@ class GenerationConfig(Config):
         self.model_name = None
         self.max_tokens = None
         self.temperature = 0.0
+        self.server_address = None  # override for local server (default: preset value)
+        self.server_port = None     # override for local server (default: preset value)
         
         # Reasoning model specific parameters
         self.is_reasoning_model = False  # set to True for o1, o3, Gemini 2.5 thinking, etc.
@@ -321,6 +323,8 @@ def main(config: GenerationConfig):
         is_reasoning_model=config.is_reasoning_model,
         reasoning_effort=config.reasoning_effort,
         budget_tokens=config.budget_tokens,
+        server_address=config.server_address,
+        server_port=config.server_port,
     )
 
     # Launch workers
