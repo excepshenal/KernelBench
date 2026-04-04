@@ -112,7 +112,7 @@ def query_server(
     if server_type == "local":
         url = f"http://{server_address}:{server_port}"
         client = OpenAI(
-            api_key=SGLANG_KEY, base_url=f"{url}/v1", timeout=None, max_retries=0
+            api_key=SGLANG_KEY or "EMPTY", base_url=f"{url}/v1", timeout=None, max_retries=0
         )
         if isinstance(prompt, str):
             response = client.completions.create(
