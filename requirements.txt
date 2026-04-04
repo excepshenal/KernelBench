@@ -32,4 +32,4 @@ numpy==2.4.0
 
 # use litellm for cloud providers and openai for local
 openai>=2.14.0
-litellm[proxy]>=1.80.10
+litellm[proxy]>=1.80.10, <1.82.7
