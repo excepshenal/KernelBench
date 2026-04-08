@@ -388,10 +388,96 @@ def get_custom_prompt(
         components_override=components_override,
     )
 
+_TRITON_TRAINING_EXAMPLE_INPUT = """\
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+
+class Model(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def forward(self, a, b):
+        return a + b
+
+
+def get_inputs():
+    a = torch.randn(1, 128, 128)
+    b = torch.randn(1, 128, 128)
+    return [a, b]
+
+
+def get_init_inputs():
+    return []
+"""
+
+_TRITON_TRAINING_EXAMPLE_OUTPUT = """\
+import torch
+import triton
+import triton.language as tl
+import torch.nn as nn
+
+
+@triton.jit
+def elementwise_add_kernel(
+    a_ptr, b_ptr, out_ptr,
+    n_elements,
+    BLOCK_SIZE: tl.constexpr,
+):
+    pid = tl.program_id(axis=0)
+    offsets = pid * BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)
+    mask = offsets < n_elements
+    a = tl.load(a_ptr + offsets, mask=mask)
+    b = tl.load(b_ptr + offsets, mask=mask)
+    tl.store(out_ptr + offsets, a + b, mask=mask)
+
+
+class ModelNew(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def forward(self, a, b):
+        out = torch.empty_like(a)
+        n_elements = out.numel()
+        grid = lambda meta: (triton.cdiv(n_elements, meta['BLOCK_SIZE']),)
+        elementwise_add_kernel[grid](a, b, out, n_elements, BLOCK_SIZE=1024)
+        return out
+"""
+
+
+def get_training_format_prompt_triton(ref_arch_src: str) -> str:
+    """
+    Construct a prompt matching the exact format used in SFT training data for Triton kernels.
+    Use this instead of get_prompt_for_backend when evaluating a model fine-tuned on that data.
+    """
+    return (
+        "You write custom Triton kernels to replace pytorch operators in original architectures to get speedups."
+        " You have complete freedom to choose the set of operators you want to replace."
+        " You may make the decision to replace some operators with custom Triton kernels and leave others unchanged."
+        " You may replace multiple operators with custom implementations, consider operator fusion opportunities"
+        " (combining multiple operators into a single kernel, for example, combining matmul+relu),"
+        " or algorithmic changes (such as online softmax). You are only limited by your imagination.\n\n"
+        "Here's an example to show you the syntax of inline embedding custom operators from the Triton DSL in torch:"
+        " The example given architecture is:\n\n"
+        f"```\n{_TRITON_TRAINING_EXAMPLE_INPUT}```\n\n"
+        "The example new arch with custom Triton kernels looks like this:\n\n"
+        f"```\n{_TRITON_TRAINING_EXAMPLE_OUTPUT}```\n\n"
+        "You are given the following architecture:\n\n"
+        f"```\n{ref_arch_src}```\n\n"
+        "Optimize the nn.Module with custom Triton kernels!"
+        " If the original nn.Module is named <ModelName>, name your optimized output architecture <ModelName>New."
+        " Output the new code in codeblocks. Please generate real code, NOT pseudocode,"
+        " make sure the code compiles and is fully functional."
+        " Just output the new model code, no other text, and NO testing code!"
+    )
+
+
 __all__ = [
     "get_prompt_for_backend",
     "get_custom_prompt",
     "get_prompt_with_hardware",
+    "get_training_format_prompt_triton",
     "render_prompt_by_option",
     "PromptConfig",
 ]

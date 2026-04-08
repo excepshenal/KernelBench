@@ -6,7 +6,7 @@ import json
 import modal
 
 from kernelbench.eval import eval_kernel_against_ref
-from kernelbench.prompt_constructor_toml import get_prompt_for_backend, get_custom_prompt
+from kernelbench.prompt_constructor_toml import get_prompt_for_backend, get_custom_prompt, get_training_format_prompt_triton
 from kernelbench.utils import (
     create_inference_server_from_presets,
     extract_first_code,
@@ -207,7 +207,9 @@ def main(config: EvalConfig):
                 "include_hardware_info is True but hardware_gpu_name is not provided."
             )
 
-    if custom_prompt_key:
+    if custom_prompt_key == "training_format_triton":
+        custom_prompt = get_training_format_prompt_triton(ref_arch_src)
+    elif custom_prompt_key:
         custom_prompt = get_custom_prompt(
             custom_prompt_key,
             ref_arch_src=ref_arch_src,

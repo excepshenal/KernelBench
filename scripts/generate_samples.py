@@ -9,7 +9,7 @@ from pydra import Config, REQUIRED
 
 from kernelbench.dataset import construct_kernelbench_dataset
 from kernelbench.eval import eval_kernel_against_ref
-from kernelbench.prompt_constructor_toml import get_prompt_for_backend, get_custom_prompt
+from kernelbench.prompt_constructor_toml import get_prompt_for_backend, get_custom_prompt, get_training_format_prompt_triton
 from kernelbench.utils import (
     create_inference_server_from_presets,
     extract_first_code,
@@ -116,7 +116,9 @@ def generate_sample_single(
     ref_arch_src = problem.code
     problem_name = problem.name
 
-    if config.custom_prompt_key:
+    if config.custom_prompt_key == "training_format_triton":
+        custom_prompt = get_training_format_prompt_triton(ref_arch_src)
+    elif config.custom_prompt_key:
         custom_prompt = get_custom_prompt(
             config.custom_prompt_key,
             ref_arch_src=ref_arch_src,
