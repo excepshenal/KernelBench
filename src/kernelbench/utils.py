@@ -114,26 +114,25 @@ def query_server(
         client = OpenAI(
             api_key=SGLANG_KEY or "EMPTY", base_url=f"{url}/v1", timeout=None, max_retries=0
         )
-        if isinstance(prompt, str):
-            response = client.completions.create(
-                model=model_name,
-                prompt=prompt,
-                temperature=temperature,
-                n=num_completions,
-                max_tokens=max_tokens,
-                top_p=top_p,
-            )
-            outputs = [choice.text for choice in response.choices]
+        if isinstance(prompt, list) and prompt and prompt[0].get("role") == "system":
+            messages = prompt
         else:
-            response = client.chat.completions.create(
-                model=model_name,
-                messages=prompt,
-                temperature=temperature,
-                n=num_completions,
-                max_tokens=max_tokens,
-                top_p=top_p,
-            )
-            outputs = [choice.message.content for choice in response.choices]
+            messages = []
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
+            if isinstance(prompt, str):
+                messages.append({"role": "user", "content": prompt})
+            else:
+                messages.extend(prompt)
+        response = client.chat.completions.create(
+            model=model_name,
+            messages=messages,
+            temperature=temperature,
+            n=num_completions,
+            max_tokens=max_tokens,
+            top_p=top_p,
+        )
+        outputs = [choice.message.content for choice in response.choices]
         
         # output processing
         if len(outputs) == 1:

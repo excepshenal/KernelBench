@@ -57,7 +57,8 @@ class EvalConfig(Config):
         self.temperature = None
         self.server_address = None  # override for local server (default: preset value)
         self.server_port = None     # override for local server (default: preset value)
-        
+        self.system_prompt = "You are a helpful assistant"
+
         # Reasoning model specific parameters
         self.is_reasoning_model = False  # set to True for o1, o3, Gemini 2.5 thinking, etc.
         self.reasoning_effort = None  # for o1/o3: "low", "medium", "high"
@@ -160,6 +161,7 @@ def main(config: EvalConfig):
         budget_tokens=config.budget_tokens,
         server_address=config.server_address,
         server_port=config.server_port,
+        system_prompt=config.system_prompt,
     )
 
     # Prompt Construction (Note: could be shortened in future PR)
