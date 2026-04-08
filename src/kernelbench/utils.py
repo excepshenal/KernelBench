@@ -411,7 +411,8 @@ def extract_first_code(output_string: str, code_language_types: list[str]) -> st
 
         return code
 
-    return None
+    # No code fences found — assume the entire output is code
+    return trimmed if trimmed else None
 
 
 def extract_last_code(output_string: str, code_language_types: list[str]) -> str | None:
