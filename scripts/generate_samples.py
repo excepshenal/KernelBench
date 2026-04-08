@@ -61,7 +61,8 @@ class GenerationConfig(Config):
         self.server_port = None     # override for local server (default: preset value)
         self.top_k = None
         self.top_p = None
-        
+        self.system_prompt = "You are a helpful assistant"
+
         # Reasoning model specific parameters
         self.is_reasoning_model = False  # set to True for o1, o3, Gemini 2.5 thinking, etc.
         self.reasoning_effort = "low"  # for o1/o3: "low", "medium", "high"
@@ -329,6 +330,7 @@ def main(config: GenerationConfig):
         server_port=config.server_port,
         top_k=config.top_k,
         top_p=config.top_p,
+        system_prompt=config.system_prompt,
     )
 
     # Launch workers
